@@ -1,0 +1,8 @@
+The current implementation of the Controller backup stops completely the three Controller nodes, effectively disrupting during the whole backup process duration. As the Controllers are not needed for the VMs that run into the cluster to keep working, this does not disrupt the normal operation of the applications running on the Openstack cluster, but it disrupt any kind of change or upgrade on the cloud itself.
+
+The idea behind this feature is not to have any kind of downtime on the Controller while doing the backup. However, doing the backup with the Controller running could create “bad” or incorrect backups without consistency. So, as we have three Controllers in active-passive haproxy setups, we can stop one of them for a backup without disrupting the control plane.
+
+The backup will happen in a serial way, first one node, then other and last the third one. As the Controller is still serving requests and changing configuration, the contents of the database of the three nodes will be slightly different. This issue will be corrected during restoration while the databases synchronize between themselves. The restoration order will define which copy is the one that is kept. 
+
+As the Galera cluster is going to restore two of the database instances from one of them (the first one that started). That copy is guaranteed to be consistent, as it was taken with the node out of the cluster, so Openstack will happily start. There is a risk that some resources being created while the backup is running will not land on that backup and need to wait to the next one (the idea of the backup is to be periodic), but that is an acceptable behaviour.
+
