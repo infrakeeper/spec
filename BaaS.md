@@ -45,19 +45,19 @@ To document the API and be able to expose it to third parties, we will use the O
 As Backup is going to use ReaR, which has a lot of different configurations, it is necessary to expose an API that is able to apply the configuration changes that are needed by ReaR. This configurations will be stored in another table in the database (configs table) and will be read before every execution.
 
 # Return list of configs
-GET https://ip:port/v1/backup/config
+GET https://ip:port/v1/config
 
 # Return a config
-GET https://ip:port/v1/backup/config/{id}
+GET https://ip:port/v1/config/{id}
 
 # Config  new
-POST https://ip:port/v1/backup/config
+POST https://ip:port/v1/config
 
 # Config  update
-PUT https://ip:port/v1/backup/config/{id}
+PUT https://ip:port/v1/config/{id}
 
 # Config  delete
-DELETE https://ip:port/v1/backup/config/{id}
+DELETE https://ip:port/v1/config/{id}
 
 | ID | NAME | ... |
 
