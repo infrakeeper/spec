@@ -2,7 +2,9 @@
 
 The Backup process entails a collection of ansible scripts that manipulate the servers to leave them in a “blank” state suitable for performing a consistent backup, a specific tool that is able to backup a complete Linux machine into an ISO image that later can be used to restore and an openstack CLI integration that allows the operator to perform the actions in a very easy way.
 
-This backup automation has a lot of things built in and it is very helpful, but it still lacks some degree of integration. To solve that, we are going to implement what we call backup as a service. This service will be a piece of software that will run on a container in the openstack’s overcloud, exposing an API that can be accessed by third parties to trigger or program backups, to list all the history of backups that are stored in the system and allow to trigger restorations or delete old backups. It will even be capable of accepting backup programming and programmed cleanups.
+This backup automation has a lot of things built in and it is very helpful, but it still lacks some degree of integration. To solve that, we are going to implement what we call backup as a service. This service will be a piece of software that will run on a container in the openstack’s undercloud, exposing an API that can be accessed by third parties to trigger or program backups, to list all the history of backups that are stored in the system and allow to trigger restorations or delete old backups. It will even be capable of accepting backup programming and programmed cleanups.
+
+This service will embed an ansible executor, playbooks and the backup_and_restore role, launching ansible playbooks in response to the invoked REST endpoint APIs.
 
 As Openstack on Openshift deployed via an operator seems to be the future of Openstack, my proposal is to write this Service in Golang, which is much better aligned with the Openshift/Kubernetes/containers environment than Openstack’s traditional Python.
 
@@ -33,9 +35,33 @@ As the bakups are stored remotely, in a remote storage that we cannot take in ac
 
 The backups table of the database should contain at least, the following data:
 
-| ID | NAME | LOCATION_URL | CREATION_DATE |
+| ID | NAME | LOCATION_URL | TYPE | STATUS | CREATION_DATE | TIME |
+
+TYPE could be: full, DB, Filesystem, ceph auth
+STATUS could be: init, running, completed
 
 To document the API and be able to expose it to third parties, we will use the OpenAPI specification (formerly known as Swagger). The API documentation will be embedded on the service binary.
+
+As Backup is going to use ReaR, which has a lot of different configurations, it is necessary to expose an API that is able to apply the configuration changes that are needed by ReaR. This configurations will be stored in another table in the database (configs table) and will be read before every execution.
+
+# Return list of configs
+GET https://ip:port/v1/backup/config
+
+# Return a config
+GET https://ip:port/v1/backup/config/{id}
+
+# Config  new
+POST https://ip:port/v1/backup/config
+
+# Config  update
+PUT https://ip:port/v1/backup/config/{id}
+
+# Config  delete
+DELETE https://ip:port/v1/backup/config/{id}
+
+| ID | NAME | ... |
+
+The ... represents a column for each one of the ReaR config parameters that are deemed necessary to be dynamic.
 
 ## RESTORE
 
@@ -65,3 +91,6 @@ GET https://ip:port/v1/restore/{id}
 GET https://ip:port/v1/restore/last
 ```
 
+# RBAC
+
+TBD??
